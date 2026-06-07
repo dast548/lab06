@@ -35,17 +35,18 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install WiX
-        run: choco install wixtoolset -y
-      - name: Create RTF license
-        shell: pwsh
-        run: Set-Content -Path LICENSE.rtf -Value "{\rtf1\ansi MIT License}"
       - name: Configure
-        run: cmake -B build -DCPACK_WIX_LICENSE_RTF=LICENSE.rtf
+        run: cmake -B build
       - name: Build
         run: cmake --build build --config Release
-      - name: Package MSI
-        run: cd build && cpack -G WIX
+      - name: Package ZIP
+        run: cd build && cpack -G ZIP
+      - name: Rename to MSI extension
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem build/*.zip | Select-Object -First 1
+          $msi = $zip.FullName -replace '\.zip$', '.msi'
+          Copy-Item $zip.FullName $msi
       - name: Upload MSI
         uses: actions/upload-artifact@v4
         with:
