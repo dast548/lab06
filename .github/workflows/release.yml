@@ -13,7 +13,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake g++ rpm
       - name: Configure
-        run: cmake -B build -DCPACK_GENERATOR="DEB;RPM"
+        run: cmake -B build
       - name: Build
         run: cmake --build build
       - name: Package DEB
@@ -35,24 +35,26 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install WiX
-        run: choco install wixtoolset -y
+      - name: Install NSIS
+        run: choco install nsis -y
       - name: Configure
         run: cmake -B build
       - name: Build
         run: cmake --build build --config Release
-      - name: Package MSI
-        run: cd build && cpack -G WIX
-      - name: Upload MSI
+      - name: Package NSIS
+        run: cd build && cpack -G NSIS
+      - name: Upload NSIS
         uses: actions/upload-artifact@v4
         with:
-          name: msi-package
-          path: build/*.msi
+          name: nsis-package
+          path: build/*.exe
 
   build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install cmake
+        run: brew install cmake
       - name: Configure
         run: cmake -B build
       - name: Build
@@ -80,10 +82,10 @@ jobs:
         with:
           name: rpm-package
           path: packages/
-      - name: Download MSI
+      - name: Download NSIS
         uses: actions/download-artifact@v4
         with:
-          name: msi-package
+          name: nsis-package
           path: packages/
       - name: Download DMG
         uses: actions/download-artifact@v4
