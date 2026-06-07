@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ rpm
+      - name: Configure
+        run: cmake -B build -DCPACK_GENERATOR="DEB;RPM"
+      - name: Build
+        run: cmake --build build
+      - name: Package DEB
+        run: cd build && cpack -G DEB
+      - name: Package RPM
+        run: cd build && cpack -G RPM
+      - name: Upload DEB
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-package
+          path: build/*.deb
+      - name: Upload RPM
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-package
+          path: build/*.rpm
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install WiX
+        run: choco install wixtoolset -y
+      - name: Configure
+        run: cmake -B build
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package MSI
+        run: cd build && cpack -G WIX
+      - name: Upload MSI
+        uses: actions/upload-artifact@v4
+        with:
+          name: msi-package
+          path: build/*.msi
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -B build
+      - name: Build
+        run: cmake --build build
+      - name: Package DMG
+        run: cd build && cpack -G DragNDrop
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmg-package
+          path: build/*.dmg
+
+  release:
+    needs: [build-linux-deb, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download DEB
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-package
+          path: packages/
+      - name: Download RPM
+        uses: actions/download-artifact@v4
+        with:
+          name: rpm-package
+          path: packages/
+      - name: Download MSI
+        uses: actions/download-artifact@v4
+        with:
+          name: msi-package
+          path: packages/
+      - name: Download DMG
+        uses: actions/download-artifact@v4
+        with:
+          name: dmg-package
+          path: packages/
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packages/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
