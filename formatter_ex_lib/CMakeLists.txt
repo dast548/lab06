@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.5)
 project(formatter_ex)
 
 add_library(formatter_ex STATIC formatter_ex.cpp)
