@@ -31,26 +31,26 @@ jobs:
           name: rpm-package
           path: build/*.rpm
 
-    build-windows:
-      runs-on: windows-latest
-      steps:
-        - uses: actions/checkout@v4
-        - name: Install WiX
-          run: choco install wixtoolset -y
-        - name: Create RTF license
-          run: |
-            echo "{\rtf1\ansi MIT License}" > LICENSE.rtf
-        - name: Configure
-          run: cmake -B build -DCPACK_WIX_LICENSE_RTF=LICENSE.rtf
-        - name: Build
-          run: cmake --build build --config Release
-        - name: Package MSI
-          run: cd build && cpack -G WIX
-        - name: Upload MSI
-          uses: actions/upload-artifact@v4
-          with:
-            name: msi-package
-            path: build/*.msi
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install WiX
+        run: choco install wixtoolset -y
+      - name: Create RTF license
+        shell: pwsh
+        run: Set-Content -Path LICENSE.rtf -Value "{\rtf1\ansi MIT License}"
+      - name: Configure
+        run: cmake -B build -DCPACK_WIX_LICENSE_RTF=LICENSE.rtf
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package MSI
+        run: cd build && cpack -G WIX
+      - name: Upload MSI
+        uses: actions/upload-artifact@v4
+        with:
+          name: msi-package
+          path: build/*.msi
 
   build-macos:
     runs-on: macos-latest
@@ -85,7 +85,7 @@ jobs:
         with:
           name: rpm-package
           path: packages/
-      - name: Download NSIS
+      - name: Download MSI
         uses: actions/download-artifact@v4
         with:
           name: msi-package
